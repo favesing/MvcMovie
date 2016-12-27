@@ -20,9 +20,34 @@ namespace MvcMovie.Controllers
         }
 
         // GET: Movies
-        public async Task<IActionResult> Index()
+        //public async Task<IActionResult> Index()
+        //{
+        //    return View(await _context.Movie.ToListAsync());
+        //}
+       
+        public async Task<IActionResult> Index(string movieGenre, string search)
         {
-            return View(await _context.Movie.ToListAsync());
+            var genreQuery = from m in _context.Movie
+                         orderby m.Genre
+                         select m.Genre;
+
+            var movies = from m in _context.Movie
+                         select m;
+
+            if (!String.IsNullOrEmpty(search))
+            {
+                movies = movies.Where(s => s.Title.Contains(search));
+            }
+
+            if (!String.IsNullOrEmpty(movieGenre))
+            {
+                movies = movies.Where(x => x.Genre == movieGenre);
+            }
+
+            var vm = new MovieGenreViewModel();
+            vm.genres = new SelectList(await genreQuery.Distinct().ToListAsync());
+            vm.movies = await movies.ToListAsync();
+            return View(vm);
         }
 
         // GET: Movies/Details/5
@@ -53,7 +78,7 @@ namespace MvcMovie.Controllers
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("ID,Genre,Price,ReleaseDate,Title")] Movie movie)
+        public async Task<IActionResult> Create([Bind("ID,Genre,Price,ReleaseDate,Title,Rating")] Movie movie)
         {
             if (ModelState.IsValid)
             {
@@ -85,7 +110,7 @@ namespace MvcMovie.Controllers
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("ID,Genre,Price,ReleaseDate,Title")] Movie movie)
+        public async Task<IActionResult> Edit(int id, [Bind("ID,Genre,Price,ReleaseDate,Title,Rating")] Movie movie)
         {
             if (id != movie.ID)
             {
